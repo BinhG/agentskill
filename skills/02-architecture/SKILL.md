@@ -1,54 +1,37 @@
 ---
 name: 02-architecture
-description: "Tiêu chuẩn kiến trúc: Module hóa, Cô lập lỗi, Test độc lập, Bảo mật chiều sâu và Quy chuẩn code size."
+description: "Chuẩn kiến trúc khi triển khai: module hóa, cô lập lỗi, validate input, timeout/fallback cho I/O, giữ code nhỏ dễ test."
 ---
 
-# Kỹ Năng: Kiến Trúc & Quy Chuẩn Code (Architecture & Code Standards)
+# Kỹ năng: Architecture & Code Standards
 
-**Mục đích**:
-Đảm bảo mọi code được thiết kế theo mô hình **"Sập 1 chỗ không kéo toàn hệ thống"**, tích hợp kiểm thử và bảo mật ngay từ đầu.
+## Khi nào dùng
+Dùng ở mọi task có sửa code, đặc biệt khi thêm feature mới hoặc đụng tới API/DB/external service.
 
-## 1. Thiết Kế Cốt Lõi
+## Nguyên tắc bắt buộc
+1. **Loose coupling**: module giao tiếp qua interface rõ ràng.
+2. **Fault isolation**: lỗi cục bộ không làm sập luồng chính.
+3. **Validation first**: input phải được validate ở biên hệ thống.
+4. **I/O safety**: network/DB call có timeout + xử lý lỗi phù hợp.
+5. **Small units**: function dài > 80 dòng thì tách helper.
 
-### 1.1 Loose Coupling — Khớp Nối Lỏng
-- Mỗi tính năng nằm trong folder/module riêng. Module A không gọi trực tiếp DB query hay biến cục bộ của module B.
-- Giao tiếp an toàn: Module B chỉ nhận "kết quả" từ A, không chui vào trong A.
-- Phần phụ (Log, Email) bị lỗi → phần chính (Tạo Đơn Hàng) vẫn thành công.
-
-### 1.2 Fault Isolation — Cô Lập Lỗi
-- Luôn bao bọc lời gọi API/module rủi ro trong `try...catch`.
-- Không "Trắng Trang": UI chỉ hiện thông báo lỗi cục bộ, phần còn lại vẫn hoạt động.
-
-## 2. Ba Trụ Cột: Code + Test + Bảo Mật
-
-### Trụ 1: MODULAR CODE
+## Cấu trúc module khuyến nghị
 ```text
-/src/features/payment/
-  ├── payment.controller.ts   # Request/Response
-  ├── payment.service.ts      # Business Logic
-  ├── payment.repository.ts   # Database (nơi duy nhất đụng DB)
-  └── payment.test.ts         # Unit Test
+feature/
+  controller   # I/O mapping, status code
+  service      # business rules
+  repository   # DB/external adapter
+  test         # unit/integration theo scope
 ```
-- File `payment` KHÔNG chứa `SELECT * FROM users`. Muốn user → gọi `getPublicUser()` từ module user.
 
-### Trụ 2: ISOLATED TESTING
-- Test module nào chỉ dùng mock data trong phạm vi module đó.
-- Test phần A fail → phần B vẫn chạy bình thường.
+## Guardrails triển khai
+- Không truy cập trực tiếp dữ liệu nội bộ module khác.
+- Không để business logic nằm ở controller.
+- Không trộn query DB với transform phức tạp trong cùng hàm dài.
+- Với external API: phải có timeout, retry/backoff (nếu hợp lệ), fallback hoặc graceful error.
 
-### Trụ 3: DEFENSE IN DEPTH
-- **Trust No One**: Frontend khóa form rồi, Backend vẫn validate lại bằng Schema (Zod, Joi).
-- **Least Privilege**: RLS ở DB, Edge Function chỉ đọc bảng được phép.
-- **Circuit Breaker**: API bên ngoài phải có Timeout (VD: 8s). Treo quá → cắt, trả 408.
-
-## 3. Quy Chuẩn Code Size
-
-- **Luật cứng**: Hàm dài quá **80 dòng** → bắt buộc tách thành helper.
-- **Sát thủ Try-Catch**: Logic DB/Network thiếu Timeout hoặc Fallback → viết lại ngay.
-- **Không tự phát minh bánh xe**: Có thư viện chuẩn 1 dòng giải quyết được → không viết thuật toán 20 dòng.
-
-## 4. Checklist Bắt Buộc Khi Tạo Feature Mới
-
-- [ ] Code đã đóng gói thành function/class riêng biệt chưa?
-- [ ] Hàm throw Error → app chính có crash không? Đã Try-Catch/Fallback chưa?
-- [ ] Đã validate input trước khi xử lý logic chưa?
-- [ ] Tình huống xấu nhất → user nhận thông báo tử tế hay màn hình trắng?
+## Checklist trước khi kết thúc task
+- [ ] Input/output contract rõ và có validate.
+- [ ] Đường lỗi được xử lý (không “nổ trắng trang”).
+- [ ] Logic quan trọng có test hoặc ít nhất có bước verify tái lập.
+- [ ] Không tạo coupling mới giữa các module.

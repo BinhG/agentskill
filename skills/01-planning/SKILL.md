@@ -1,44 +1,49 @@
 ---
 name: 01-planning
-description: "Quy trình phân tích & lập kế hoạch: Brainstorming đa luồng, phản biện chéo và chọn giải pháp tối ưu trước khi viết code."
+description: "Phân tích và lập kế hoạch trước khi code: tạo phương án, phản biện trade-off, chốt implementation_plan rõ phạm vi + kiểm thử."
 ---
 
-# Kỹ Năng: Phân Tích & Lập Kế Hoạch (Planning & Solution Design)
+# Kỹ năng: Planning & Solution Design
 
-**Mục đích**:
-Khi gặp bài toán phức tạp, AI KHÔNG lao vào viết code ngay. Phải tự kích hoạt **Quy trình Phản biện** để mổ xẻ vấn đề và tìm giải pháp **đơn giản nhất, ít code nhất, hiệu quả nhất**.
+## Khi nào dùng
+Kích hoạt khi yêu cầu có một trong các dấu hiệu:
+- Bài toán chưa rõ ranh giới, có nhiều cách làm.
+- Ảnh hưởng từ 2 module trở lên.
+- Có rủi ro về hiệu năng, bảo mật, dữ liệu, hoặc migration.
+- User muốn “thiết kế trước”, “đề xuất phương án”, “review hướng làm”.
 
-## 1. Nguyên Tắc Cốt Lõi
+## Mục tiêu đầu ra
+Trước khi code phải có `implementation_plan.md` gồm:
+1. Mục tiêu + phạm vi (in-scope / out-of-scope).
+2. 2-3 phương án tiếp cận.
+3. Trade-off rõ ràng (độ phức tạp, rủi ro, effort, khả năng rollback).
+4. Kế hoạch verify (test/build/manual check).
+5. Danh sách file dự kiến thay đổi (`[NEW] / [MODIFY] / [DELETE]`).
 
-- **KISS (Keep It Simple, Stupid)**: Giải pháp đầu tiên nảy ra thường là giải pháp mệt mỏi nhất. Dừng lại 1 nhịp để tìm góc nhìn đi tắt.
-- **Less is More**: Đôi khi thay đổi luồng nghiệp vụ (Business Flow) hiệu quả hơn đẻ thêm Design Pattern.
-- **No Hero Coding**: Không viết hàm 500 dòng không ai hiểu (kể cả AI ở session sau).
+## Khung phản biện 3 vai
 
-## 2. Mô Hình 3 Vai (Subagent Roles)
+### 1) Architect
+- Đề xuất nhiều hướng khác nhau về bản chất (không chỉ đổi tên hàm).
+- Chỉ rõ giả định kỹ thuật của từng hướng.
 
-Khi đối mặt bài toán lớn, AI luân phiên đóng 3 vai trước khi xuất code:
+### 2) Devil’s Advocate
+Bắt buộc phản biện từng phương án bằng câu hỏi:
+1. “Nếu tải tăng 10x, điểm nghẽn đầu tiên là gì?”
+2. “Có thể giảm 30-50% số dòng thay đổi không?”
+3. “Dùng built-in / thư viện chuẩn thay vì tự viết được không?”
 
-### 👤 Kiến Trúc Sư (The Architect)
-- Đề xuất **2-3 hướng tiếp cận** hoàn toàn khác nhau.
-- Phân tích rõ: Ưu điểm, Nhược điểm, Giới hạn hệ thống, Trade-offs.
+### 3) Executor
+- Chỉ bước sang coding khi đã chọn 1 phương án cuối.
+- Nếu phát hiện giả định sai trong lúc code: quay lại plan, cập nhật rõ lý do.
 
-### 👤 Kẻ Phản Biện (The Devil's Advocate)
-- Tấn công các giải pháp bằng 3 câu hỏi bắt buộc:
-  1. *"1 triệu user request cùng lúc — cái gì nổ đầu tiên?"*
-  2. *"Làm sao code cái này với một nửa số dòng?"*
-  3. *"Có thư viện native/built-in nào giải quyết sẵn không?"*
-- Gạt bỏ khối logic rườm rà, chọn phương án thanh lịch nhất.
+## Quy trình thực thi
+1. Tóm tắt yêu cầu user thành acceptance criteria.
+2. Liệt kê phương án + trade-off.
+3. Chọn phương án tối ưu theo tiêu chí: đơn giản, an toàn, dễ bảo trì.
+4. Viết `implementation_plan.md`.
+5. Xin user xác nhận trước khi sửa source code.
 
-### 👤 Kỹ Sư Triển Khai (The Executor)
-- Chỉ bắt tay vào code sau khi phương án được chắt lọc qua Phản Biện.
-
-## 3. Quy Trình Thực Thi
-
-1. **Khởi tạo**: Tạo `implementation_plan.md` để phác thảo.
-2. **Liệt kê đa luồng**: 2-3 hướng tiếp cận khác nhau.
-3. **Tranh luận nội bộ**: Tự phản biện, loại bỏ cách dở.
-4. **Báo cáo User**: Trình bày kết luận cuối bằng ngôn ngữ tự nhiên.
-5. **Chờ duyệt**: KHÔNG đụng vào source code cho đến khi User đồng ý.
-
----
-*Việc giải quyết bài toán khó không phải thao diễn thuật toán hàn lâm, mà là tối giản đến mức 6 tháng sau một dev mới vào nghề cũng fix bug được.*
+## Định nghĩa hoàn thành
+- Có plan rõ, có verify plan, có ranh giới phạm vi.
+- User hiểu vì sao chọn phương án đó.
+- Không có code production nào được sửa trước bước xác nhận.

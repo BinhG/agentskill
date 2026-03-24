@@ -1,48 +1,42 @@
 ---
 name: 03-quality-gate
-description: "Cổng chất lượng 2 mức: Strict Mode (block code xấu) và Advisor Mode (gợi ý nhẹ nhàng, ghi tech debt)."
+description: "Cổng chất lượng 2 chế độ: Advisor (ship nhanh có kiểm soát) và Strict (chặn lỗi kiến trúc, buộc xử lý root-cause)."
 ---
 
-# Kỹ Năng: Cổng Chất Lượng (Quality Gate)
+# Kỹ năng: Quality Gate
 
-**Mục đích**:
-Kiểm soát chất lượng code với 2 mức hoạt động tùy theo ngữ cảnh dự án.
+## Mục tiêu
+Đảm bảo tốc độ phát triển không đánh đổi độ ổn định dài hạn.
 
-## Mức 1: Advisor Mode (MẶC ĐỊNH)
+## Chế độ hoạt động
 
-Khi User đang cần ship nhanh (MVP), AI đóng vai **Cố Vấn nhẹ nhàng**:
+### 1) Advisor Mode (mặc định)
+Dùng khi user ưu tiên tốc độ.
 
-### Review nhẹ trước khi code
-- Đưa ra 1-2 câu về hệ quả cách làm hiện tại.
-- Gợi ý 1 phương án gọn hơn nếu có.
-- Hỏi User chọn: làm nhanh hay làm gọn? User chọn nhanh → gõ code ngay, không đôi co.
+Yêu cầu tối thiểu:
+- Nêu ngắn gọn 1-2 rủi ro nếu có.
+- Đề xuất phương án gọn hơn nếu chi phí thấp.
+- Cho phép ship nhanh nếu user chấp nhận trade-off.
 
-### Ghi chép Tech Debt im lặng
-- Phát hiện code smell (DRY violation, hàm > 200 dòng) → ghi vào `TODO_REFACTOR.md`.
-- **Không tự ý xóa sửa**. Cuối task nhắc nhẹ: *"Có vài nợ kỹ thuật trong TODO_REFACTOR, lúc nào rảnh mình xử lý."*
+Nếu phát hiện nợ kỹ thuật:
+- Ghi vào `TODO_REFACTOR.md` (nếu repo có dùng).
+- Không tự mở rộng scope nếu user chưa yêu cầu.
 
----
+### 2) Strict Mode
+Kích hoạt khi user yêu cầu “review kỹ / strict / hardening”.
 
-## Mức 2: Strict Mode (Kích hoạt khi User yêu cầu review kỹ)
+Tiêu chí chặn:
+- Hàm quá lớn, khó test, khó đọc.
+- Thiếu timeout/fallback cho I/O rủi ro.
+- Thiết kế tạo coupling chặt không cần thiết.
+- Fix triệu chứng nhưng chưa chạm root cause.
 
-AI chuyển thành **Kẻ Phủ Quyết (The Executioner)** — Zero Tolerance:
+## Bộ câu hỏi stress-test
+1. Nếu traffic tăng mạnh, bottleneck đầu tiên ở đâu?
+2. Nếu external dependency chậm/lỗi, hệ thống degrade thế nào?
+3. Có thể đơn giản hóa thiết kế mà vẫn giữ hành vi không?
+4. Kiểm thử hiện tại có đủ để bắt regression chính không?
 
-### Khóa chặn
-- Hàm > 80 dòng → **DỪNG**. Báo lỗi, yêu cầu tách helper trước khi code tiếp.
-- Logic DB/Network thiếu Timeout/Fallback → **XÓA** viết lại. Cấm cãi.
-- Tightly Coupled → yêu cầu tách Interface ngay lập tức.
-
-### Stress-test bắt buộc
-Trước khi tạo file/logic mới, AI tự trả lời:
-- *"1 triệu request/giây — cái gì nổ đầu tiên?"*
-- *"Chỗ này không Try-Catch, API ngoài ngỏm thì server sập luôn?"*
-- *"Code này Tightly Coupled — yêu cầu tách!"*
-
-→ Chỉ khi thoả mãn, mới chuyển sang EXECUTION.
-
----
-
-**Quy tắc chuyển mức**: 
-- Mặc định = Advisor Mode.
-- User nói "review kỹ", "hardcore", "strict" → chuyển Strict Mode.
-- User nói "làm nhanh", "ship trước" → quay lại Advisor Mode.
+## Định nghĩa hoàn thành theo Quality Gate
+- Advisor: đã cảnh báo ngắn gọn, có kiểm tra tối thiểu, có quyết định trade-off rõ.
+- Strict: đã xử lý lỗi thiết kế chính, có bằng chứng verify hợp lệ.

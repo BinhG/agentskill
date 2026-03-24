@@ -1,32 +1,24 @@
 ---
-description: AI Development Workflow
+description: AI Development Workflow (Quick Mode)
 ---
 
-# Quick Workflow — Cho task đơn giản
+# Quick Workflow — cho task nhỏ, scope rõ
 
-Dùng khi fix bug nhỏ, thay đổi nhanh, hoặc task có scope rõ ràng (không cần full 4 phases).
+Dùng khi fix bug nhỏ, chỉnh logic cục bộ, hoặc thay đổi trong ít file.
 
----
+## 1) Understand
+1. Đọc yêu cầu và tiêu chí hoàn thành.
+2. Xác định file liên quan và root cause.
+3. Chốt phạm vi sửa tối thiểu.
 
-## Step 1: Understand (Hiểu)
+## 2) Implement
+1. Sửa đúng điểm gây lỗi, tránh lan scope.
+2. Tuân thủ `02-architecture` (validate + cô lập lỗi + function gọn).
+3. Không thay đổi hành vi ngoài yêu cầu.
 
-1. Đọc lỗi / yêu cầu.
-2. Locate file liên quan (dùng `grep_search`, `view_file`).
-3. Xác định root cause hoặc điểm cần sửa.
+## 3) Verify
+1. Chạy test/build/check liên quan.
+2. Soát lại diff để loại bỏ thay đổi thừa.
+3. Báo kết quả + rủi ro còn lại cho user.
 
-## Step 2: Implement (Làm)
-
-1. Sửa code tối thiểu — chỉ đụng file cần thiết.
-2. Tuân thủ `02-architecture` (modular, try-catch, validate).
-3. Giữ function size < 80 dòng.
-
-## Step 3: Verify (Kiểm tra)
-
-1. Chạy build / test nếu có.
-2. Đọc output, fix ngay nếu lỗi.
-3. Báo kết quả cho User.
-
----
-
-> **Khi nào chuyển sang `/antigravity-workflow`?**
-> Khi task có scope lớn, ảnh hưởng nhiều file, hoặc cần thiết kế kiến trúc mới.
+> Chuyển sang `workflows/antigravity-workflow.md` khi task lớn, nhiều phụ thuộc, hoặc cần plan/approval rõ ràng.
