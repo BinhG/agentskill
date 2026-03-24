@@ -5,47 +5,47 @@ description: "Quy trình duy trì context, quản lý trạng thái dự án qua
 
 # Kỹ Năng: Quản Lý Đa Phiên & Bộ Nhớ (Session & Memory Management)
 
-**Mục đích**:
-Đảm bảo AI và Lập trình viên làm việc liên tục giữa các session mà không mất context.
+**Mục đích**: Đảm bảo context không bị mất giữa các phiên làm việc.
 
-## 1. Cơ Chế Bộ Nhớ AI
+## Artifact Vận Hành
 
-- **Knowledge Items (KIs)**: AI tự tạo KIs sau mỗi phiên để ghi nhớ kiến thức nền. Session mới → đọc summaries tự động.
-- **Conversation Logs**: Lịch sử chat tồn tại, có thể yêu cầu AI đọc lại log phiên cũ.
-- **Project Artifacts (.md)**: Tài liệu tĩnh trong source code là "mỏ neo" — AI đọc là đồng bộ 100% context.
+| File | Vai trò | Khi nào cập nhật |
+|---|---|---|
+| `task.md` | Checklist tiến độ | Đầu + trong + cuối task |
+| `implementation_plan.md` | Thiết kế kỹ thuật | Phase Planning |
+| `walkthrough.md` | Log kết quả & proof | Cuối task |
+| `CHANGELOG.md` | Lịch sử thay đổi | Khi ship feature |
+| `TODO.md` | Việc chưa xong / bug tồn đọng | Bất kỳ lúc nào |
 
-## 2. Quy Trình Chuẩn
+## Quy Trình Mở Phiên (Bootstrap)
 
-### Đóng Session (Trước khi tắt chat)
-1. **Cập nhật nhật ký**: `CHANGELOG.md` hoặc `WALKTHROUGH.md` — ghi rõ đã làm gì, file nào thay đổi.
-2. **Cập nhật TODO**: `TODO.md` hoặc `TASK.md` — note việc chưa xong, bug tồn đọng.
-3. **Lưu quy ước mới**: Phát sinh quy tắc mới → tạo Skill trong `.agents/skills/` hoặc update user_rules.
+1. Đọc KI summaries liên quan.
+2. Đọc `TODO.md` / `CHANGELOG.md` / `task.md` nếu có.
+3. Tóm tắt trạng thái cho User trước khi bắt đầu code.
 
-### Mở Session Mới (Bootstrapping)
-Sử dụng prompt khởi động chuẩn:
+**Prompt mẫu cho User**:
 > *"Tiếp tục dự án [Tên]. Hôm trước làm xong [Feature A].*
-> *1. Kiểm tra KI summaries liên quan.*
-> *2. Đọc `TODO.md` và `CHANGELOG.md`.*
-> *3. Cho tôi biết trạng thái, ta làm tiếp task tiếp theo."*
+> *Đọc TODO.md và cho tôi biết trạng thái."*
 
-## 3. Dọn Dẹp Context
+## Quy Trình Đóng Phiên (Handoff)
 
-### Advisor Mode (nhẹ nhàng)
-- Cuối phiên, rà quét KIs → liệt kê trùng lặp/mâu thuẫn.
-- Hỏi User trước khi gộp: *"Có 2 KI về Database Schema đang đá nhau. Gộp không?"*
+1. Cập nhật `task.md` — đánh dấu `[x]` hoàn thành, `[ ]` còn lại.
+2. Ghi `walkthrough.md` — đã làm gì, file nào thay đổi, test ra sao.
+3. Cập nhật `TODO.md` — bug tồn đọng, việc chưa xong.
+4. Nếu có quy ước mới → tạo Skill mới hoặc update user_rules.
 
-### Aggressive Mode (khi context quá rác)
-- AI thông báo: *"Memory quá rác, context trôi dạt. Kích hoạt Compress..."*
-- Tự tóm tắt, gộp file rác thành 1 file gọn gàng. Code cũ không dùng → xoá khỏi ghi chú.
+## Dọn Dẹp Context
 
-## 4. Best Practices
+- **Nhẹ**: Cuối phiên, rà KIs trùng lặp → hỏi User trước khi gộp.
+- **Mạnh**: Context quá rác → thông báo User, tự tóm tắt + gộp file thừa.
 
-- **Micro-sessions**: Mỗi session chỉ xử lý 1 mục tiêu. Xong → lưu markdown → đóng → mở session mới.
-- **Mở rộng Skills**: Thêm skill mới vào `.agents/skills/` cho quy tắc cụ thể của dự án.
-- **File lõi**: Dự án lớn luôn có `ARCHITECTURE.md` / `DB_SCHEMA.md`. Ngắt quãng lâu → bảo AI đọc lại trước khi code.
+## Anti-Patterns
 
-## 5. Anti-Patterns
-
-- ❌ Nghĩ AI tự nhớ toàn bộ code (thực tế chỉ nhớ qua KIs + file được yêu cầu đọc).
-- ❌ Kéo dài 1 session fix bug hàng giờ (nên viết bug ra file, mở session mới).
+- ❌ Nghĩ AI tự nhớ toàn bộ (thực tế chỉ nhớ qua KIs + file được đọc).
+- ❌ Kéo dài 1 session fix bug hàng giờ (nên viết bug ra file → mở session mới).
 - ❌ Sửa dependency mà không document (session sau AI hiểu sai hệ thống).
+
+## Best Practices
+
+- **Micro-sessions**: 1 session = 1 mục tiêu. Xong → lưu → đóng → mở mới.
+- **File lõi**: Dự án lớn luôn có `ARCHITECTURE.md`. Ngắt quãng lâu → đọc lại trước khi code.

@@ -2,72 +2,77 @@
 description: Antigravity Development Workflow - A phase-gated, robust execution harness for long-running project development.
 ---
 
-# MANDATORY RULES — VIOLATION IS FORBIDDEN
+# Antigravity Workflow — Phase-Gated Execution
 
-- **NEVER skip steps.** Execute from Phase 0 in order. Update `task.md` upon completion of each phase.
-- **You MUST use your native MCP and file system tools throughout the entire workflow.**
-- **Read the user rules BEFORE starting a new task.** Always follow `<user_rules>`.
-
----
+**NEVER skip phases. Execute in order. Update `task.md` at each phase transition.**
 
 ## Skill Activation Map
 
-| Phase | Active Skills |
-|---|---|
-| Phase 0: Init | `04-session-management` |
-| Phase 1: Plan | `01-planning` |
-| Phase 2: Execute | `02-architecture` + `03-quality-gate` |
-| Phase 3: Verify | `03-quality-gate` (Strict) |
-| Phase 4: Ship | `04-session-management` |
+| Phase | Active Skills | Artifact đầu ra |
+|---|---|---|
+| Phase 0: Init | `04-session-management` | `task.md` |
+| Phase 1: Plan | `01-planning` | `implementation_plan.md` |
+| Phase 2: Execute | `02-architecture` + `03-quality-gate` | Code changes |
+| Phase 3: Verify | `03-quality-gate` (Strict) | Test results |
+| Phase 4: Ship | `04-session-management` | `walkthrough.md` |
 
 ---
 
-## Phase 0: Initialization (DO NOT SKIP)
+## Phase 0: Initialization
 
-1. Check `task.md` (create if missing) to outline milestones.
-2. Search and review Knowledge Items (KIs) relevant to the request.
-3. Call `task_boundary` with Mode `PLANNING`.
+1. Tạo/cập nhật `task.md` với checklist milestones.
+2. Đọc KI summaries + project artifacts liên quan.
+3. Chuyển sang Phase 1.
+
+**Gate**: `task.md` đã có checklist → ✅ Qua.
 
 ---
 
-## Phase 1: PLAN (Task Decomposition & Design)
+## Phase 1: PLAN
 
-1. Analyze requirements from the user request.
-2. Identify cross-component dependencies and architecture patterns.
-3. Create or update `implementation_plan.md` with:
-   - Goal Description
-   - Proposed Changes (`[MODIFY]`, `[NEW]`, `[DELETE]`)
+1. Phân tích requirements.
+2. Xác định dependencies và architecture patterns.
+3. Tạo `implementation_plan.md` theo chuẩn `01-planning`:
+   - Phạm vi IN/OUT scope
+   - 2-3 phương án + trade-offs
+   - Danh sách file `[NEW]` / `[MODIFY]` / `[DELETE]`
    - Verification Plan
-4. Call `notify_user` to request review.
-5. **Do NOT proceed without user confirmation.**
+4. Trình User review.
+
+**Gate**: User xác nhận plan → ✅ Qua. Chưa confirm → ❌ KHÔNG code.
 
 ---
 
-## Phase 2: EXECUTE (Implementation)
+## Phase 2: EXECUTE
 
-1. Call `task_boundary` and switch Mode to `EXECUTION`.
-2. Follow Single Source of Truth — no duplicate logic.
-3. Implement according to the approved `implementation_plan.md`.
-4. Keep functions small (< 80 lines), maintain coding style.
-5. Check off items in `task.md` as completed.
+1. Triển khai theo `implementation_plan.md` đã duyệt.
+2. Tuân thủ `02-architecture` (5 nguyên tắc bắt buộc).
+3. `03-quality-gate` Advisor mode — cảnh báo trade-off, ghi tech debt.
+4. Hàm < 80 dòng, không sửa file ngoài plan.
+5. Đánh dấu `[x]` trong `task.md` khi hoàn thành từng item.
 
----
-
-## Phase 3: VERIFY (QA & Testing)
-
-1. Call `task_boundary` and switch Mode to `VERIFICATION`.
-2. Run automated tests, linting, or build processes via `run_command`.
-3. Review logs for runtime or logic errors.
-4. Fix root cause if needed (switch back to `EXECUTION` if intricate).
+**Gate**: Tất cả items trong plan đã implement → ✅ Qua.
 
 ---
 
-## Phase 4: REFINE & DOCUMENT (Shipping Readiness)
+## Phase 3: VERIFY
 
-1. Check for unnecessary complexity or dead code.
-2. Ensure no broad rewriting of un-planned files occurred.
-3. Update or create `walkthrough.md` documenting:
-   - Logic changed
-   - Tests run
-   - Current feature status
-4. Call `notify_user` with `walkthrough.md` for final validation.
+1. Chuyển `03-quality-gate` sang **Strict mode**.
+2. Chạy build / test / lint.
+3. Đọc output, phân tích lỗi.
+4. Nếu cần fix → quay Phase 2, fix root cause, rồi verify lại.
+
+**Gate**: Build pass + không còn vi phạm Strict → ✅ Qua.
+
+---
+
+## Phase 4: SHIP & DOCUMENT
+
+1. Kiểm tra dead code / complexity thừa.
+2. Đảm bảo không rewrite file ngoài kế hoạch.
+3. Tạo `walkthrough.md`:
+   - Logic đã thay đổi
+   - Tests đã chạy
+   - Trạng thái hiện tại
+4. Cập nhật `CHANGELOG.md` / `TODO.md` nếu cần.
+5. Trình User kết quả cuối.

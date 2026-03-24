@@ -5,44 +5,53 @@ description: "Cổng chất lượng 2 mức: Strict Mode (block code xấu) và
 
 # Kỹ Năng: Cổng Chất Lượng (Quality Gate)
 
-**Mục đích**:
-Kiểm soát chất lượng code với 2 mức hoạt động tùy theo ngữ cảnh dự án.
+**Mục đích**: Kiểm soát chất lượng code với 2 mức hoạt động.
+
+## Chuyển Mức
+
+| Trigger | Mode |
+|---|---|
+| Mặc định / "ship nhanh" / "làm trước" | **Advisor** |
+| "review kỹ" / "hardcore" / "strict" / hardening phase | **Strict** |
+
+---
 
 ## Mức 1: Advisor Mode (MẶC ĐỊNH)
 
-Khi User đang cần ship nhanh (MVP), AI đóng vai **Cố Vấn nhẹ nhàng**:
+### Trong lúc code
+- Nhận thấy trade-off → cảnh báo **1-2 câu ngắn** + gợi ý phương án gọn hơn.
+- User chọn "làm nhanh" → code ngay, không đôi co.
 
-### Review nhẹ trước khi code
-- Đưa ra 1-2 câu về hệ quả cách làm hiện tại.
-- Gợi ý 1 phương án gọn hơn nếu có.
-- Hỏi User chọn: làm nhanh hay làm gọn? User chọn nhanh → gõ code ngay, không đôi co.
+### Ghi chép Tech Debt
+- Phát hiện code smell (DRY violation, hàm > 200 dòng, logic duplicate) → ghi vào `TODO_REFACTOR.md`.
+- **Không tự ý sửa**. Cuối task nhắc nhẹ: *"Có nợ kỹ thuật trong TODO_REFACTOR."*
 
-### Ghi chép Tech Debt im lặng
-- Phát hiện code smell (DRY violation, hàm > 200 dòng) → ghi vào `TODO_REFACTOR.md`.
-- **Không tự ý xóa sửa**. Cuối task nhắc nhẹ: *"Có vài nợ kỹ thuật trong TODO_REFACTOR, lúc nào rảnh mình xử lý."*
+### Định nghĩa hoàn thành (Advisor)
+- ✅ Code chạy được, user chấp nhận trade-off.
+- ✅ Tech debt đã log (nếu có).
 
 ---
 
-## Mức 2: Strict Mode (Kích hoạt khi User yêu cầu review kỹ)
+## Mức 2: Strict Mode
 
-AI chuyển thành **Kẻ Phủ Quyết (The Executioner)** — Zero Tolerance:
+### Điều kiện CHẶN — không cho phép ship
 
-### Khóa chặn
-- Hàm > 80 dòng → **DỪNG**. Báo lỗi, yêu cầu tách helper trước khi code tiếp.
-- Logic DB/Network thiếu Timeout/Fallback → **XÓA** viết lại. Cấm cãi.
-- Tightly Coupled → yêu cầu tách Interface ngay lập tức.
+| Vi phạm | Hành động |
+|---|---|
+| Hàm > 80 dòng | **DỪNG**. Yêu cầu tách helper. |
+| Logic DB/Network thiếu Timeout hoặc Fallback | **VIẾT LẠI**. Cấm cãi. |
+| Tightly Coupled (module A đọc thẳng DB của B) | **TÁCH Interface** ngay. |
+| Fix triệu chứng mà chưa tìm Root Cause | **CHẶN**. Phân tích lại. |
 
 ### Stress-test bắt buộc
-Trước khi tạo file/logic mới, AI tự trả lời:
-- *"1 triệu request/giây — cái gì nổ đầu tiên?"*
-- *"Chỗ này không Try-Catch, API ngoài ngỏm thì server sập luôn?"*
-- *"Code này Tightly Coupled — yêu cầu tách!"*
+Trước khi tạo file/logic mới, tự trả lời:
+1. *"1 triệu request/giây — cái gì nổ đầu tiên?"*
+2. *"Chỗ này thiếu try-catch, API ngoài ngỏm thì server sập luôn?"*
+3. *"Module này đang coupled chặt với module nào?"*
 
-→ Chỉ khi thoả mãn, mới chuyển sang EXECUTION.
+→ Chỉ khi thoả mãn mới được ship.
 
----
-
-**Quy tắc chuyển mức**: 
-- Mặc định = Advisor Mode.
-- User nói "review kỹ", "hardcore", "strict" → chuyển Strict Mode.
-- User nói "làm nhanh", "ship trước" → quay lại Advisor Mode.
+### Định nghĩa hoàn thành (Strict)
+- ✅ Không còn vi phạm nào trong bảng CHẶN.
+- ✅ Stress-test 3 câu đã trả lời rõ.
+- ✅ Checklist `02-architecture` pass hết.
